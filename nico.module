@@ -6,6 +6,19 @@
  */
 
 /**
+ * Implements hook_permission().
+ */
+function nico_permission() {
+  return array(
+    'administer nico' => array(
+      'title' => t('Administer nico'),
+      'description' => t('Perform administration tasks for the nico module.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
  * Implements hook_entity_info().
  */
 function nico_entity_info() {
@@ -22,9 +35,34 @@ function nico_entity_info() {
       ),
       'label callback' => 'entity_class_label',
       'uri callback' => 'entity_class_uri',
-      'module' => 'nico_blog',
+      'module' => 'nico',
+      'access callback' => 'nico_admin_access',
+      'admin ui' => array(
+        'path' => 'admin/structure/nico',
+        'file' => 'nico.admin.inc',
+        'controller class' => 'EntityContentUIController',
+      ),
     ),
   );
+}
+
+/**
+ * Access callback for the entity API.
+ *
+ * @param string $op
+ *   The operation being performed. One of 'view', 'update', 'create', 'delete'
+ *   or just 'edit' (being the same as 'create' or 'update').
+ * @param string $profile
+ *   (optional) A profile to check access for. If nothing is given, access for
+ *   all profiles is determined.
+ * @param string $account
+ *   (optional) The user to check for. Leave it to NULL to check for the global user.
+ *
+ * @return boolean
+ *   Whether access is allowed or not.
+ */
+function nico_admin_access($op, $profile = NULL, $account = NULL) {
+  return user_access('administer nico', $account);
 }
 
 /**

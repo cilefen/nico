@@ -19,6 +19,25 @@ function nico_permission() {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function nico_menu() {
+  return array(
+    'blog/%' => array(
+      'title' => 'Blog',
+      'page callback' => 'nico_view_blog',
+      'page arguments' => array(1),
+      'access arguments' => array('access content'),
+    ),
+    'blogs' => array(
+      'title' => 'Blogs',
+      'page callback' => 'nico_view_blogs',
+      'access arguments' => array('access content'),
+    ),
+  );
+}
+
+/**
  * Implements hook_entity_info().
  */
 function nico_entity_info() {
@@ -26,7 +45,7 @@ function nico_entity_info() {
     'nico_blog' => array(
       'label' => t('Blog Entry'),
       'plural label' => t('Blog Entries'),
-      'entity class' => 'Entity',
+      'entity class' => 'NicoBlogEntity',
       'controller class' => 'EntityAPIController',
       'base table' => 'nico_blog',
       'fieldable' => TRUE,
@@ -40,7 +59,15 @@ function nico_entity_info() {
       'admin ui' => array(
         'path' => 'admin/structure/nico',
         'file' => 'nico.admin.inc',
-        'controller class' => 'EntityContentUIController',
+        'controller class' => 'EntityDefaultUIController',
+      ),
+      'bundles' => array(
+        'nico_blog' => array(
+          'label' => t('Blog'),
+          'admin' => array(
+            'path' => 'admin/structure/nico',
+          ),
+        ),
       ),
     ),
   );
@@ -62,14 +89,75 @@ function nico_entity_info() {
  *   Whether access is allowed or not.
  */
 function nico_admin_access($op, $profile = NULL, $account = NULL) {
+  if ($op == 'view') {
+    return user_access('access content', $account);
+  }
   return user_access('administer nico', $account);
 }
 
 /**
- * Adds default body field to the nico entity.
+ * Callback for blog/{id}.
+ */
+function nico_view_blog($id) {
+  $blogs = entity_load('nico_blog', array($id));
+  $blog = $blogs[$id];
+  drupal_set_title($blog->title);
+  $render = entity_view('nico_blog', array($blog));
+  return $render;
+}
+
+/**
+ * Callback for blogs.
+ */
+function nico_view_blogs() {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'nico_blog')->pager(10);
+  $results = $query->execute();
+  $nico_blogs = array();
+  if (isset($results['nico_blog'])) {
+    $nico_blog_nids = array_keys($results['nico_blog']);
+    $nico_blogs = entity_load('nico_blog', $nico_blog_nids);
+  }
+  $render = array(
+    'entries' => entity_view('nico_blog', $nico_blogs),
+    'pager' => array(
+      '#markup' => theme('pager'),
+      '#weight' => 10
+    )
+  );
+  return $render;
+}
+
+/**
+ * Class defining nico blogs, for the Entity API.
+ */
+class NicoBlogEntity extends Entity {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function defaultUri() {
+    return array('path' => 'blog/' . $this->identifier());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function defaultLabel() {
+    return isset($this->title) ? $this->title : '';
+  }
+
+}
+
+/**
+ * Adds a body field to the nico entity.
+ *
+ * Modified from node_add_body_field().
+ *
+ * @todo As an internal function, this probably doesn't need to return anything.
  *
  * @return array
- *   Body field instance.
+ *   The body field instance.
  */
 function _nico_add_body_field() {
   $field = field_info_field('nico_body');

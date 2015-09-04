@@ -1,2 +1,70 @@
 <?php
 
+/**
+ * @file
+ * The nico module file.
+ */
+
+/**
+ * Implements hook_entity_info().
+ */
+function nico_entity_info() {
+  return array(
+    'nico_blog' => array(
+      'label' => t('Blog Entry'),
+      'plural label' => t('Blog Entries'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'nico_blog',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'id',
+      ),
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'module' => 'nico_blog',
+    ),
+  );
+}
+
+/**
+ * Adds default body field to the nico entity.
+ *
+ * @return array
+ *   Body field instance.
+ */
+function _nico_add_body_field() {
+  $field = field_info_field('nico_body');
+  if (empty($field)) {
+    $field = array(
+      'field_name' => 'nico_body',
+      'type' => 'text_with_summary',
+      'entity_types' => array('nico_blog'),
+    );
+    field_create_field($field);
+  }
+  $instance = field_info_instance('nico_blog', 'nico_body', 'nico_blog');
+  if (empty($instance)) {
+    $instance = array(
+      'field_name' => 'nico_body',
+      'entity_type' => 'nico_blog',
+      'bundle' => 'nico_blog',
+      'label' => 'Body',
+      'widget' => array('type' => 'text_textarea_with_summary'),
+      'settings' => array('display_summary' => TRUE),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'type' => 'text_default',
+        ),
+        'teaser' => array(
+          'label' => 'hidden',
+          'type' => 'text_summary_or_trimmed',
+        ),
+      ),
+    );
+    field_create_instance($instance);
+  }
+
+  return $instance;
+}

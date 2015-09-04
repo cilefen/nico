@@ -9,36 +9,36 @@
  * Implements hook_schema().
  */
 function nico_schema() {
-  $schema['nico'] = array(
-    'description' => 'The base table for nicos.',
+  $schema['nico_blog'] = array(
+    'description' => 'The base table for nico blogs.',
     'fields' => array(
-      'nid' => array(
-        'description' => 'The primary identifier for a nico.',
+      'id' => array(
+        'description' => 'The primary identifier for a nico blog.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'title' => array(
-        'description' => 'The title of this nico, always treated as non-markup plain text.',
+        'description' => 'The title of this nico blog, always treated as non-markup plain text.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
       'created' => array(
-        'description' => 'The Unix timestamp when the nico was created.',
+        'description' => 'The Unix timestamp when the nico blog was created.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'changed' => array(
-        'description' => 'The Unix timestamp when the nico was most recently saved.',
+        'description' => 'The Unix timestamp when the nico blog was most recently saved.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'uid' => array(
-        'description' => 'The {users}.uid that owns this nico; initially, this is the user that created it.',
+        'description' => 'The {users}.uid that owns this nico blog; initially, this is the user that created it.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -55,8 +55,15 @@ function nico_schema() {
         'columns' => array('uid' => 'uid'),
       ),
     ),
-    'primary key' => array('nid'),
+    'primary key' => array('id'),
   );
 
   return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function nico_install() {
+  _nico_add_body_field();
 }
